@@ -65,18 +65,22 @@ static void format_day_of_week(char* buffer, int buffer_len, struct tm* now) {
   strftime(buffer, buffer_len, "%a", now);
 }
 
-static void format_day_and_month(char* buffer, int buffer_len, struct tm* now) {
+static void format_day_th(char* buffer, int buffer_len, struct tm* now) {
   if (now->tm_mday / 10 == 1) {
-    strftime(buffer, buffer_len, "%b\n%eth", now);
+    strftime(buffer, buffer_len, "%eth", now);
   } else if (now->tm_mday % 10 == 1) {
-    strftime(buffer, buffer_len, "%b\n%est", now);
+    strftime(buffer, buffer_len, "%est", now);
   } else if (now->tm_mday % 10 == 2) {
-    strftime(buffer, buffer_len, "%b\n%end", now);
+    strftime(buffer, buffer_len, "%end", now);
   } else if (now->tm_mday % 10 == 3) {
-    strftime(buffer, buffer_len, "%b\n%erd", now);
+    strftime(buffer, buffer_len, "%erd", now);
   } else {
-    strftime(buffer, buffer_len, "%b\n%eth", now);
+    strftime(buffer, buffer_len, "%eth", now);
   }
+}
+
+static void format_day(char* buffer, int buffer_len, struct tm* now) {
+  strftime(buffer, buffer_len, "%e", now);
 }
 
 static void format_short_month(char* buffer, int buffer_len, struct tm* now) {
