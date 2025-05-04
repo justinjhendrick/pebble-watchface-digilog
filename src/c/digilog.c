@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include "utils.h"
 
-#define DEBUG_TIME (true)
+#define DEBUG_TIME (false)
 #define DEG_PER_MIN (360 / 60)
 #define BUFFER_LEN (100)
 
