@@ -1,8 +1,8 @@
 #include <pebble.h>
 #include "utils.h"
 
-#define DEBUG_TIME (true)
-#define DEBUG_BT_OK (false)
+#define DEBUG_TIME (false)
+#define DEBUG_BT_OK (true)
 #define BUFFER_LEN (100)
 #define COL_BG                   COLOR_FALLBACK(GColorBlack, GColorBlack)
 #define COL_MIN                  COLOR_FALLBACK(GColorDarkGreen, GColorWhite)
