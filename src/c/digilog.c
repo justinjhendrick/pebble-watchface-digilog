@@ -4,21 +4,21 @@
 #define DEBUG_TIME (false)
 #define DEBUG_BT_OK (true)
 #define BUFFER_LEN (100)
-#define COL_BG                   COLOR_FALLBACK(GColorBlack, GColorBlack)
-#define COL_MIN                  COLOR_FALLBACK(GColorDarkGreen, GColorWhite)
-#define COL_FACE                 COLOR_FALLBACK(GColorWhite, GColorBlack)
-#define COL_STROKE               COLOR_FALLBACK(GColorBlack, GColorWhite)
-#define COL_SUN                  COLOR_FALLBACK(GColorYellow, GColorWhite)
-#define COL_MORNING              COLOR_FALLBACK(GColorMelon, GColorBlack)
-#define COL_DAY                  COLOR_FALLBACK(GColorVividCerulean, GColorBlack)
-#define COL_EVENING              COLOR_FALLBACK(GColorChromeYellow, GColorBlack)
-#define COL_NIGHT                COLOR_FALLBACK(GColorCobaltBlue, GColorBlack)
-#define COL_MONTH_TEXT           COLOR_FALLBACK(GColorWhite, GColorWhite)
-#define COL_HOUR_TEXT            COLOR_FALLBACK(GColorBlack, GColorBlack)
-#define COL_ERR_TEXT             COLOR_FALLBACK(GColorChromeYellow, GColorWhite)
-#define COL_WDAY_TEXT            COLOR_FALLBACK(GColorBlack, GColorWhite)
-#define COL_SELECTED_WDAY        COLOR_FALLBACK(GColorWhite, GColorWhite)
-#define COL_SELECTED_WDAY_TEXT   COLOR_FALLBACK(GColorBlack, GColorBlack)
+#define COL_BG                   COLOR_FALLBACK(GColorBlack,          GColorBlack)
+#define COL_MIN                  COLOR_FALLBACK(GColorDarkGreen,      GColorWhite)
+#define COL_FACE                 COLOR_FALLBACK(GColorWhite,          GColorBlack)
+#define COL_STROKE               COLOR_FALLBACK(GColorBlack,          GColorWhite)
+#define COL_SUN                  COLOR_FALLBACK(GColorYellow,         GColorWhite)
+#define COL_MORNING              COLOR_FALLBACK(GColorMelon,          GColorBlack)
+#define COL_DAY                  COLOR_FALLBACK(GColorVividCerulean,  GColorBlack)
+#define COL_EVENING              COLOR_FALLBACK(GColorChromeYellow,   GColorBlack)
+#define COL_NIGHT                COLOR_FALLBACK(GColorCobaltBlue,     GColorBlack)
+#define COL_MONTH_TEXT           COLOR_FALLBACK(GColorWhite,          GColorWhite)
+#define COL_HOUR_TEXT            COLOR_FALLBACK(GColorBlack,          GColorBlack)
+#define COL_ERR_TEXT             COLOR_FALLBACK(GColorChromeYellow,   GColorWhite)
+#define COL_WDAY_TEXT            COLOR_FALLBACK(GColorBlack,          GColorWhite)
+#define COL_SELECTED_WDAY        COLOR_FALLBACK(GColorWhite,          GColorWhite)
+#define COL_SELECTED_WDAY_TEXT   COLOR_FALLBACK(GColorBlack,          GColorBlack)
 
 static Window* s_window;
 static Layer* s_layer;
@@ -70,13 +70,7 @@ static void draw_arrow(GContext* ctx, GPoint center, int angle_deg, int inner, i
 }
 
 static void draw_hour(GContext* ctx, struct tm* now, GPoint center, int radius, int sun_radius) {
-  GFont font;
   int hour_angle_deg = 360 * now->tm_hour / 24 + 180;
-  if (2 * sun_radius > 26) {
-    font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-  } else {
-    font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-  }
   GSize bbox_size = GSize(sun_radius * 2, sun_radius * 2);
   GPoint bbox_mpoint = cartesian_from_polar(center, radius, hour_angle_deg);
   GRect bbox = rect_from_midpoint(bbox_mpoint, bbox_size);
@@ -87,12 +81,11 @@ static void draw_hour(GContext* ctx, struct tm* now, GPoint center, int radius, 
   graphics_fill_circle(ctx, bbox_mpoint, sun_radius);
   graphics_draw_circle(ctx, bbox_mpoint, sun_radius);
   format_hour(s_buffer, BUFFER_LEN, now, true);
-  graphics_draw_text(ctx, s_buffer, font, vcenter(bbox), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  draw_text_midalign(ctx, s_buffer, bbox, GTextAlignmentCenter, true);
 }
 
 static void draw_minute(GContext* ctx, struct tm* now, GPoint center, int radius, int outer_radius, int sun_radius) {
   int min_angle_deg = deg_from_mins(now->tm_min);
-  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
   GSize bbox_size = GSize(sun_radius * 2, sun_radius * 2);
   GPoint bbox_mpoint = cartesian_from_polar(center, radius, min_angle_deg);
   GRect bbox = rect_from_midpoint(bbox_mpoint, bbox_size);
@@ -102,7 +95,7 @@ static void draw_minute(GContext* ctx, struct tm* now, GPoint center, int radius
   } else {
     snprintf(s_buffer, BUFFER_LEN, "%d", now->tm_min);
   }
-  graphics_draw_text(ctx, s_buffer, font, vcenter(bbox), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+  draw_text_midalign(ctx, s_buffer, bbox, GTextAlignmentCenter, true);
   graphics_context_set_fill_color(ctx, COL_MIN);
   graphics_context_set_stroke_color(ctx, COL_MIN);
   graphics_context_set_stroke_width(ctx, 1);
@@ -151,7 +144,6 @@ static void draw_week(GContext* ctx, struct tm* now, GRect bounds, GPoint center
   int inner_radius = vcr + 2;
   int outer_radius = bounds.size.h - vcr;
   int width = outer_radius - inner_radius;
-  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   for (int d = 0; d < 7; d++) {
     if (now->tm_wday == d) {
       graphics_context_set_fill_color(ctx, COL_SELECTED_WDAY);
@@ -167,30 +159,29 @@ static void draw_week(GContext* ctx, struct tm* now, GRect bounds, GPoint center
     GRect bbox = rect_from_midpoint(text_center, GSize(width, width));
     s_buffer[0] = WEEK[d];
     s_buffer[1] = '\0';
-    graphics_draw_text(ctx, s_buffer, font, vcenter(bbox), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    draw_text_midalign(ctx, s_buffer, bbox, GTextAlignmentCenter, true);
   }
 }
 
-static void draw_month(GContext* ctx, struct tm* now, GRect bounds) {
-  int height = 30;
-  GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_28);
+static void draw_month(GContext* ctx, struct tm* now, GRect bounds, int vcr) {
+  int height = (bounds.size.h - 2 * vcr) * 3 / 2;
   GRect l_bbox = GRect(
-    bounds.origin.x + 1,
-    bounds.origin.y + bounds.size.h - height,
-    bounds.size.w / 2,
-    height
+    bounds.origin.x + 2,
+    bounds.origin.y + bounds.size.h - height - 1,
+    bounds.size.w / 2 - 2,
+    height - 4
   );
   GRect r_bbox = GRect(
     bounds.origin.x + bounds.size.w / 2,
-    bounds.origin.y + bounds.size.h - height,
-    bounds.size.w / 2 - 1,
-    height
+    bounds.origin.y + bounds.size.h - height - 1,
+    bounds.size.w / 2 - 2,
+    height - 4
   );
   graphics_context_set_text_color(ctx, COL_MONTH_TEXT);
   format_day(s_buffer, BUFFER_LEN, now);
-  graphics_draw_text(ctx, s_buffer, font, vcenter(r_bbox), GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
+  draw_text_botalign(ctx, s_buffer, r_bbox, GTextAlignmentRight, false);
   format_short_month(s_buffer, BUFFER_LEN, now);
-  graphics_draw_text(ctx, s_buffer, font, vcenter(l_bbox), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+  draw_text_botalign(ctx, s_buffer, l_bbox, GTextAlignmentLeft, false);
 }
 
 static void draw_bluetooth(GContext* ctx, GRect bounds) {
@@ -226,97 +217,38 @@ static void draw_bluetooth(GContext* ctx, GRect bounds) {
   graphics_draw_line(ctx, GPoint(mid, bottom), GPoint(right, lower));
 }
 
-static void draw_text_boxes(GContext* ctx, GRect bounds) {
-  graphics_context_set_stroke_width(ctx, 1);
-  for (int y = bounds.origin.y; y < bounds.origin.y + bounds.size.h; y++) {
-    if (y % 10 == 0) {
-      graphics_context_set_stroke_color(ctx, GColorWhite);
-    } else if (y % 10 == 1) {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-    } else if (y % 10 == 2) {
-      graphics_context_set_stroke_color(ctx, GColorRed);
-    } else if (y % 10 == 3) {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-    } else if (y % 10 == 4) {
-      graphics_context_set_stroke_color(ctx, GColorOrange);
-    } else if (y % 10 == 5) {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-    } else if (y % 10 == 6) {
-      graphics_context_set_stroke_color(ctx, GColorYellow);
-    } else if (y % 10 == 7) {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-    } else if (y % 10 == 8) {
-      graphics_context_set_stroke_color(ctx, GColorGreen);
-    } else if (y % 10 == 9) {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-    }
-    graphics_draw_line(ctx, GPoint(bounds.origin.x, y), GPoint(bounds.origin.x + bounds.size.w, y));
-  }
-  graphics_context_set_stroke_color(ctx, GColorDarkGray);
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_context_set_text_color(ctx, GColorWhite);
-  //GFont fonts[4] = {
-  //  fonts_get_system_font(FONT_KEY_GOTHIC_14),
-  //  fonts_get_system_font(FONT_KEY_GOTHIC_18),
-  //  fonts_get_system_font(FONT_KEY_GOTHIC_24),
-  //  fonts_get_system_font(FONT_KEY_GOTHIC_28),
-  //};
-  int sizes[16] = {
-     8, 10, 12, 14,
-    16, 18, 20, 22,
-    24, 26, 28, 30,
-    32, 34, 36, 38,
-  };
-  int x = bounds.origin.x;
-  int y = bounds.origin.y;
-  for (int r = 0; r < 4; r++) {
-    for (int c = 0; c < 4; c++) {
-      int size = sizes[r * 4 + c];
-      GRect bbox = GRect(x, y, size, size);
-      snprintf(s_buffer, BUFFER_LEN, "%d", size);
-      graphics_fill_rect(ctx, bbox, 0, 0);
-      graphics_draw_rect(ctx, bbox);
-      draw_text(ctx, s_buffer, bbox, GTextAlignmentCenter, false);
-      x += 40;
-    }
-    x = 0;
-    y += 40;
-  }
-}
-
 static void update_layer(Layer* layer, GContext* ctx) {
-  //time_t temp = time(NULL);
-  //struct tm* now = localtime(&temp);
-  //if (DEBUG_TIME) {
-  //  fast_forward_time(now);
-  //}
+  time_t temp = time(NULL);
+  struct tm* now = localtime(&temp);
+  if (DEBUG_TIME) {
+    fast_forward_time(now);
+  }
 
   GRect bounds = layer_get_bounds(layer);
   int vcr = min(bounds.size.h, bounds.size.w) / 2;
   GPoint center = GPoint(vcr, bounds.origin.y + bounds.size.h - vcr);
-  draw_text_boxes(ctx, bounds);
-  //int sun_radius = bounds.size.w / 12; //= 17;
-  //int between = vcr - sun_radius * 2;
-  //draw_sunlight_background(ctx, center, bounds.size.h);
-  //if (PBL_IF_RECT_ELSE(true, false)) {
-  //  draw_month(ctx, now, bounds);
-  //  draw_week(ctx, now, bounds, center, vcr);
-  //  draw_bluetooth(ctx, bounds);
-  //}
-  //graphics_context_set_stroke_width(ctx, 3);
-  //graphics_context_set_stroke_color(ctx, COL_STROKE);
-  //graphics_context_set_fill_color(ctx, COL_FACE);
-  //graphics_fill_circle(ctx, center, between);
-  //graphics_draw_circle(ctx, center, between);
+  int sun_radius = bounds.size.w / 12 + 1;
+  int between = vcr - sun_radius * 2;
+  draw_sunlight_background(ctx, center, bounds.size.h);
+  if (PBL_IF_RECT_ELSE(true, false)) {
+    draw_month(ctx, now, bounds, vcr);
+    draw_week(ctx, now, bounds, center, vcr);
+    draw_bluetooth(ctx, bounds);
+  }
+  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_color(ctx, COL_STROKE);
+  graphics_context_set_fill_color(ctx, COL_FACE);
+  graphics_fill_circle(ctx, center, between);
+  graphics_draw_circle(ctx, center, between);
 
-  //graphics_context_set_stroke_width(ctx, 3);
-  //graphics_context_set_stroke_color(ctx, COL_STROKE);
-  //draw_ticks(ctx, center, between, -8, 0, 60, 5);
+  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_color(ctx, COL_STROKE);
+  draw_ticks(ctx, center, between, -8, 0, 60, 5);
 
-  //int hour_radius = between + sun_radius;
-  //draw_hour(ctx, now, center, hour_radius, sun_radius);
-  //int min_radius = between - 2 * sun_radius;
-  //draw_minute(ctx, now, center, min_radius, between, sun_radius);
+  int hour_radius = between + sun_radius;
+  draw_hour(ctx, now, center, hour_radius, sun_radius);
+  int min_radius = between - 2 * sun_radius;
+  draw_minute(ctx, now, center, min_radius, between, sun_radius);
 }
 
 static void window_load(Window* window) {

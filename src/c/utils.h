@@ -87,11 +87,7 @@ static void format_short_month(char* buffer, int buffer_len, struct tm* now) {
   strftime(buffer, buffer_len, "%b", now);
 }
 
-static GRect vcenter(GRect bbox) {
-  return GRect(bbox.origin.x + 1, bbox.origin.y - 2, bbox.size.w, bbox.size.h);
-}
-
-static void draw_text(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
+static void draw_text_valign(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold, int valign) {
   int h = bbox.size.h;
   int font_height = 0;
   int top_pad = 0;
@@ -133,7 +129,23 @@ static void draw_text(GContext* ctx, const char* buffer, GRect bbox, GTextAlignm
   }
   int bot_pad = h - font_height - top_pad;
   int shift_up = (top_pad - bot_pad) / 2 + 1;
+  if (valign == 1) {
+    shift_up = top_pad;
+  } else if (valign == 2) {
+    shift_up = -bot_pad;
+  }
   GRect fixed_bbox = GRect(bbox.origin.x, bbox.origin.y - shift_up, bbox.size.w, bbox.size.h);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d, %d, %d, %d", font_height, top_pad, bot_pad, shift_up);
   graphics_draw_text(ctx, buffer, font, fixed_bbox, GTextOverflowModeWordWrap, align, NULL);
+}
+
+static void draw_text_midalign(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
+  draw_text_valign(ctx, buffer, bbox, align, bold, 0);
+}
+
+static void draw_text_topalign(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
+  draw_text_valign(ctx, buffer, bbox, align, bold, 1);
+}
+
+static void draw_text_botalign(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
+  draw_text_valign(ctx, buffer, bbox, align, bold, 2);
 }
