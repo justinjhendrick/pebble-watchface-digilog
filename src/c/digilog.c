@@ -226,38 +226,97 @@ static void draw_bluetooth(GContext* ctx, GRect bounds) {
   graphics_draw_line(ctx, GPoint(mid, bottom), GPoint(right, lower));
 }
 
-static void update_layer(Layer* layer, GContext* ctx) {
-  time_t temp = time(NULL);
-  struct tm* now = localtime(&temp);
-  if (DEBUG_TIME) {
-    fast_forward_time(now);
+static void draw_text_boxes(GContext* ctx, GRect bounds) {
+  graphics_context_set_stroke_width(ctx, 1);
+  for (int y = bounds.origin.y; y < bounds.origin.y + bounds.size.h; y++) {
+    if (y % 10 == 0) {
+      graphics_context_set_stroke_color(ctx, GColorWhite);
+    } else if (y % 10 == 1) {
+      graphics_context_set_stroke_color(ctx, GColorBlack);
+    } else if (y % 10 == 2) {
+      graphics_context_set_stroke_color(ctx, GColorRed);
+    } else if (y % 10 == 3) {
+      graphics_context_set_stroke_color(ctx, GColorBlack);
+    } else if (y % 10 == 4) {
+      graphics_context_set_stroke_color(ctx, GColorOrange);
+    } else if (y % 10 == 5) {
+      graphics_context_set_stroke_color(ctx, GColorBlack);
+    } else if (y % 10 == 6) {
+      graphics_context_set_stroke_color(ctx, GColorYellow);
+    } else if (y % 10 == 7) {
+      graphics_context_set_stroke_color(ctx, GColorBlack);
+    } else if (y % 10 == 8) {
+      graphics_context_set_stroke_color(ctx, GColorGreen);
+    } else if (y % 10 == 9) {
+      graphics_context_set_stroke_color(ctx, GColorBlack);
+    }
+    graphics_draw_line(ctx, GPoint(bounds.origin.x, y), GPoint(bounds.origin.x + bounds.size.w, y));
   }
+  graphics_context_set_stroke_color(ctx, GColorDarkGray);
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, GColorWhite);
+  //GFont fonts[4] = {
+  //  fonts_get_system_font(FONT_KEY_GOTHIC_14),
+  //  fonts_get_system_font(FONT_KEY_GOTHIC_18),
+  //  fonts_get_system_font(FONT_KEY_GOTHIC_24),
+  //  fonts_get_system_font(FONT_KEY_GOTHIC_28),
+  //};
+  int sizes[16] = {
+     8, 10, 12, 14,
+    16, 18, 20, 22,
+    24, 26, 28, 30,
+    32, 34, 36, 38,
+  };
+  int x = bounds.origin.x;
+  int y = bounds.origin.y;
+  for (int r = 0; r < 4; r++) {
+    for (int c = 0; c < 4; c++) {
+      int size = sizes[r * 4 + c];
+      GRect bbox = GRect(x, y, size, size);
+      snprintf(s_buffer, BUFFER_LEN, "%d", size);
+      graphics_fill_rect(ctx, bbox, 0, 0);
+      graphics_draw_rect(ctx, bbox);
+      draw_text(ctx, s_buffer, bbox, GTextAlignmentCenter, false);
+      x += 40;
+    }
+    x = 0;
+    y += 40;
+  }
+}
+
+static void update_layer(Layer* layer, GContext* ctx) {
+  //time_t temp = time(NULL);
+  //struct tm* now = localtime(&temp);
+  //if (DEBUG_TIME) {
+  //  fast_forward_time(now);
+  //}
 
   GRect bounds = layer_get_bounds(layer);
   int vcr = min(bounds.size.h, bounds.size.w) / 2;
   GPoint center = GPoint(vcr, bounds.origin.y + bounds.size.h - vcr);
-  int sun_radius = bounds.size.w / 12; //= 17;
-  int between = vcr - sun_radius * 2;
-  draw_sunlight_background(ctx, center, bounds.size.h);
-  if (PBL_IF_RECT_ELSE(true, false)) {
-    draw_month(ctx, now, bounds);
-    draw_week(ctx, now, bounds, center, vcr);
-    draw_bluetooth(ctx, bounds);
-  }
-  graphics_context_set_stroke_width(ctx, 3);
-  graphics_context_set_stroke_color(ctx, COL_STROKE);
-  graphics_context_set_fill_color(ctx, COL_FACE);
-  graphics_fill_circle(ctx, center, between);
-  graphics_draw_circle(ctx, center, between);
+  draw_text_boxes(ctx, bounds);
+  //int sun_radius = bounds.size.w / 12; //= 17;
+  //int between = vcr - sun_radius * 2;
+  //draw_sunlight_background(ctx, center, bounds.size.h);
+  //if (PBL_IF_RECT_ELSE(true, false)) {
+  //  draw_month(ctx, now, bounds);
+  //  draw_week(ctx, now, bounds, center, vcr);
+  //  draw_bluetooth(ctx, bounds);
+  //}
+  //graphics_context_set_stroke_width(ctx, 3);
+  //graphics_context_set_stroke_color(ctx, COL_STROKE);
+  //graphics_context_set_fill_color(ctx, COL_FACE);
+  //graphics_fill_circle(ctx, center, between);
+  //graphics_draw_circle(ctx, center, between);
 
-  graphics_context_set_stroke_width(ctx, 3);
-  graphics_context_set_stroke_color(ctx, COL_STROKE);
-  draw_ticks(ctx, center, between, -8, 0, 60, 5);
+  //graphics_context_set_stroke_width(ctx, 3);
+  //graphics_context_set_stroke_color(ctx, COL_STROKE);
+  //draw_ticks(ctx, center, between, -8, 0, 60, 5);
 
-  int hour_radius = between + sun_radius;
-  draw_hour(ctx, now, center, hour_radius, sun_radius);
-  int min_radius = between - 2 * sun_radius;
-  draw_minute(ctx, now, center, min_radius, between, sun_radius);
+  //int hour_radius = between + sun_radius;
+  //draw_hour(ctx, now, center, hour_radius, sun_radius);
+  //int min_radius = between - 2 * sun_radius;
+  //draw_minute(ctx, now, center, min_radius, between, sun_radius);
 }
 
 static void window_load(Window* window) {

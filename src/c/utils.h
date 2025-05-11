@@ -90,3 +90,50 @@ static void format_short_month(char* buffer, int buffer_len, struct tm* now) {
 static GRect vcenter(GRect bbox) {
   return GRect(bbox.origin.x + 1, bbox.origin.y - 2, bbox.size.w, bbox.size.h);
 }
+
+static void draw_text(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
+  int h = bbox.size.h;
+  int font_height = 0;
+  int top_pad = 0;
+  GFont font;
+  if (h < 14) {
+    return;
+  } else if (h < 18) {
+    font_height = 9;
+    top_pad = 4;
+    if (bold) {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
+    } else {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+    }
+  } else if (h < 24) {
+    font_height = 11;
+    top_pad = 6;
+    if (bold) {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+    } else {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+    }
+  } else if (h < 28) {
+    font_height = 14;
+    top_pad = 9;
+    if (bold) {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+    } else {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_24);
+    }
+  } else {
+    font_height = 18;
+    top_pad = 9;
+    if (bold) {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    } else {
+      font = fonts_get_system_font(FONT_KEY_GOTHIC_28);
+    }
+  }
+  int bot_pad = h - font_height - top_pad;
+  int shift_up = (top_pad - bot_pad) / 2 + 1;
+  GRect fixed_bbox = GRect(bbox.origin.x, bbox.origin.y - shift_up, bbox.size.w, bbox.size.h);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d, %d, %d, %d", font_height, top_pad, bot_pad, shift_up);
+  graphics_draw_text(ctx, buffer, font, fixed_bbox, GTextOverflowModeWordWrap, align, NULL);
+}
