@@ -133,6 +133,8 @@ static void draw_text_valign(GContext* ctx, const char* buffer, GRect bbox, GTex
     shift_up = top_pad;
   } else if (valign == 2) {
     shift_up = -bot_pad;
+  } else if (valign == 3) {
+    shift_up = 0;
   }
   GRect fixed_bbox = GRect(bbox.origin.x, bbox.origin.y - shift_up, bbox.size.w, bbox.size.h);
   graphics_draw_text(ctx, buffer, font, fixed_bbox, GTextOverflowModeWordWrap, align, NULL);
@@ -148,4 +150,8 @@ static void draw_text_topalign(GContext* ctx, const char* buffer, GRect bbox, GT
 
 static void draw_text_botalign(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
   draw_text_valign(ctx, buffer, bbox, align, bold, 2);
+}
+
+static void draw_text_noalign(GContext* ctx, const char* buffer, GRect bbox, GTextAlignment align, bool bold) {
+  draw_text_valign(ctx, buffer, bbox, align, bold, 3);
 }

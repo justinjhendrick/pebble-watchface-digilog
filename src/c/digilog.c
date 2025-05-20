@@ -15,7 +15,7 @@
 #define COL_NIGHT                COLOR_FALLBACK(GColorCobaltBlue,     GColorBlack)
 #define COL_MONTH_TEXT           COLOR_FALLBACK(GColorWhite,          GColorWhite)
 #define COL_HOUR_TEXT            COLOR_FALLBACK(GColorBlack,          GColorBlack)
-#define COL_ERR_TEXT             COLOR_FALLBACK(GColorChromeYellow,   GColorWhite)
+#define COL_ERR_TEXT             COLOR_FALLBACK(GColorBlack,          GColorWhite)
 #define COL_WDAY_TEXT            COLOR_FALLBACK(GColorBlack,          GColorWhite)
 #define COL_SELECTED_WDAY        COLOR_FALLBACK(GColorWhite,          GColorWhite)
 #define COL_SELECTED_WDAY_TEXT   COLOR_FALLBACK(GColorBlack,          GColorBlack)
@@ -135,32 +135,17 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
   draw_arc(ctx, center, deg_from_mins(18), deg_from_mins(24), inner_radius, outer_radius);
 }
 
-static void draw_week(GContext* ctx, struct tm* now, GRect bounds, GPoint center, int vcr) {
-  graphics_context_set_stroke_color(ctx, COL_STROKE);
-  graphics_context_set_stroke_width(ctx, 3);
-  static const char WEEK[8] = "SMTWTFS";
-  uint32_t trigangle_start = trigangle_from_mins(51);
-  uint32_t trigangle_step = trigangle_from_mins(18) / 7;
-  int inner_radius = vcr + 2;
-  int outer_radius = bounds.size.h - vcr;
-  int width = outer_radius - inner_radius;
-  for (int d = 0; d < 7; d++) {
-    if (now->tm_wday == d) {
-      graphics_context_set_fill_color(ctx, COL_SELECTED_WDAY);
-      graphics_context_set_text_color(ctx, COL_SELECTED_WDAY_TEXT);
-    } else {
-      graphics_context_set_fill_color(ctx, COL_DAY);
-      graphics_context_set_text_color(ctx, COL_WDAY_TEXT);
-    }
-    uint32_t trigangle_arc_begin = trigangle_start + trigangle_step * d;
-    draw_arc_trigangle(ctx, center, trigangle_arc_begin, trigangle_step, inner_radius, outer_radius);
-    uint32_t trigangle_arc_midpoint = trigangle_arc_begin + trigangle_step / 2;
-    GPoint text_center = cartesian_from_polar_trigangle(center, inner_radius + width / 2, trigangle_arc_midpoint);
-    GRect bbox = rect_from_midpoint(text_center, GSize(width, width));
-    s_buffer[0] = WEEK[d];
-    s_buffer[1] = '\0';
-    draw_text_midalign(ctx, s_buffer, bbox, GTextAlignmentCenter, true);
-  }
+static void draw_week(GContext* ctx, struct tm* now, GRect bounds, int vcr) {
+  int height = (bounds.size.h - 2 * vcr) * 3 / 2;
+  GRect bbox = GRect(
+    bounds.origin.x,
+    bounds.origin.y + 2,
+    bounds.size.w,
+    height - 4
+  );
+  graphics_context_set_text_color(ctx, COL_MONTH_TEXT);
+  format_day_of_week(s_buffer, BUFFER_LEN, now);
+  draw_text_topalign(ctx, s_buffer, bbox, GTextAlignmentRight, false);
 }
 
 static void draw_month(GContext* ctx, struct tm* now, GRect bounds, int vcr) {
@@ -186,6 +171,9 @@ static void draw_month(GContext* ctx, struct tm* now, GRect bounds, int vcr) {
 
 static void draw_bluetooth(GContext* ctx, GRect bounds) {
   bool bt_ok = DEBUG_BT_OK && connection_service_peek_pebble_app_connection();
+  if (bt_ok) {
+    return;
+  }
   GRect bbox = GRect(bounds.origin.x + 2, bounds.origin.y + 2, 8, 16);
   if (bounds.size.w > 180) {
     bbox = GRect(bounds.origin.x + 2, bounds.origin.y + 2, 12, 24);
@@ -226,13 +214,13 @@ static void update_layer(Layer* layer, GContext* ctx) {
 
   GRect bounds = layer_get_bounds(layer);
   int vcr = min(bounds.size.h, bounds.size.w) / 2;
-  GPoint center = GPoint(vcr, bounds.origin.y + bounds.size.h - vcr);
+  GPoint center = grect_center_point(&bounds);
   int sun_radius = bounds.size.w / 12 + 1;
   int between = vcr - sun_radius * 2;
   draw_sunlight_background(ctx, center, bounds.size.h);
   if (PBL_IF_RECT_ELSE(true, false)) {
     draw_month(ctx, now, bounds, vcr);
-    draw_week(ctx, now, bounds, center, vcr);
+    draw_week(ctx, now, bounds, vcr);
     draw_bluetooth(ctx, bounds);
   }
   graphics_context_set_stroke_width(ctx, 3);
