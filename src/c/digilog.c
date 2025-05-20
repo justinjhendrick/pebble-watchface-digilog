@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include "utils.h"
 
-#define DEBUG_TIME (false)
+#define DEBUG_TIME (true)
 #define DEBUG_BT_OK (true)
 #define BUFFER_LEN (100)
 #define COL_BG                   COLOR_FALLBACK(GColorBlack,          GColorBlack)
@@ -25,6 +25,8 @@ static Layer* s_layer;
 static char s_buffer[BUFFER_LEN];
 static GPath* s_arc;
 static GPath* s_arrow;
+static int s_sunrise_minute_since_midnight = 60 * 6;
+static int s_sunset_minute_since_midnight = 60 * (6 + 12);
 
 static const GPathInfo ARC_POINTS = {
   .num_points = 40,
@@ -117,22 +119,56 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
   graphics_context_set_stroke_width(ctx, 3);
   graphics_context_set_stroke_color(ctx, COL_STROKE);
   int inner_radius = 0;
+  int twilight_minutes = 60;
+  int minutes_per_day = 60 * 24;
+  int sunrise_end = s_sunrise_minute_since_midnight;
+  int sunrise_start = sunrise_end - twilight_minutes;
+  int sunset_start = s_sunset_minute_since_midnight;
+  int sunset_end = sunset_start + twilight_minutes;
+  int flip = TRIG_MAX_ANGLE / 2;
 
   // morning
   graphics_context_set_fill_color(ctx, COL_MORNING);
-  draw_arc(ctx, center, deg_from_mins(42), deg_from_mins(6), inner_radius, outer_radius);
+  draw_arc_trigangle(
+    ctx,
+    center,
+    flip + sunrise_start * TRIG_MAX_ANGLE / minutes_per_day,
+    twilight_minutes * TRIG_MAX_ANGLE / minutes_per_day,
+    inner_radius,
+    outer_radius
+  );
 
   // day
   graphics_context_set_fill_color(ctx, COL_DAY);
-  draw_arc(ctx, center, deg_from_mins(48), deg_from_mins(24), inner_radius, outer_radius);
+  draw_arc_trigangle(
+    ctx,
+    center,
+    flip + sunrise_end * TRIG_MAX_ANGLE / minutes_per_day,
+    (sunset_start - sunrise_end) * TRIG_MAX_ANGLE / minutes_per_day,
+    inner_radius,
+    outer_radius
+  );
 
   // evening
   graphics_context_set_fill_color(ctx, COL_EVENING);
-  draw_arc(ctx, center, deg_from_mins(12), deg_from_mins(6), inner_radius, outer_radius);
+  draw_arc_trigangle(ctx,
+    center,
+    flip + sunset_start * TRIG_MAX_ANGLE / minutes_per_day,
+    twilight_minutes * TRIG_MAX_ANGLE / minutes_per_day,
+    inner_radius,
+    outer_radius
+  );
 
   // night
   graphics_context_set_fill_color(ctx, COL_NIGHT);
-  draw_arc(ctx, center, deg_from_mins(18), deg_from_mins(24), inner_radius, outer_radius);
+  draw_arc_trigangle(
+    ctx,
+    center,
+    flip + sunset_end * TRIG_MAX_ANGLE / minutes_per_day,
+    (minutes_per_day - sunset_end + sunrise_start) * TRIG_MAX_ANGLE / minutes_per_day,
+    inner_radius,
+    outer_radius
+  );
 }
 
 static void draw_week(GContext* ctx, struct tm* now, GRect bounds, int vcr) {
@@ -239,6 +275,20 @@ static void update_layer(Layer* layer, GContext* ctx) {
   draw_minute(ctx, now, center, min_radius, between, sun_radius);
 }
 
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+  Tuple* t;
+  t = dict_find(iter, MESSAGE_KEY_sunriseMinuteSinceMidnight);
+  if (t) {
+    s_sunrise_minute_since_midnight = t->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got sunrise %d", s_sunrise_minute_since_midnight);
+  }
+  t = dict_find(iter, MESSAGE_KEY_sunsetMinuteSinceMidnight);
+  if (t) {
+    s_sunset_minute_since_midnight = t->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got sunset %d", s_sunset_minute_since_midnight);
+  }
+}
+
 static void window_load(Window* window) {
   Layer* window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -263,6 +313,8 @@ static void init(void) {
     .unload = window_unload,
   });
   window_stack_push(s_window, true);
+  app_message_open(/*inbox_size*/64, /*outbox_size=*/256);
+  app_message_register_inbox_received(inbox_received_handler);
   s_arc = gpath_create(&ARC_POINTS);
   s_arrow = gpath_create(&ARROW_POINTS);
   tick_timer_service_subscribe(DEBUG_TIME ? SECOND_UNIT : MINUTE_UNIT, tick_handler);

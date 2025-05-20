@@ -21,7 +21,11 @@
       "watchface": true
     },
     "messageKeys": [
-      "dummy"
+      "sunriseMinuteSinceMidnight",
+      "sunsetMinuteSinceMidnight"
+    ],
+    "capabilities": [
+      "location"
     ],
     "resources": {
       "media": []
