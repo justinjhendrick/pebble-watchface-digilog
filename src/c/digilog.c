@@ -12,7 +12,7 @@
 #define COL_MORNING              COLOR_FALLBACK(GColorMelon,          GColorBlack)
 #define COL_DAY                  COLOR_FALLBACK(GColorVividCerulean,  GColorBlack)
 #define COL_EVENING              COLOR_FALLBACK(GColorChromeYellow,   GColorBlack)
-#define COL_NIGHT                COLOR_FALLBACK(GColorOxfordBlue,     GColorBlack)
+#define COL_NIGHT                COLOR_FALLBACK(GColorCobaltBlue,     GColorBlack)
 #define COL_MONTH_TEXT           COLOR_FALLBACK(GColorWhite,          GColorWhite)
 #define COL_HOUR_TEXT            COLOR_FALLBACK(GColorBlack,          GColorBlack)
 #define COL_ERR_TEXT             COLOR_FALLBACK(GColorBlack,          GColorWhite)
@@ -140,7 +140,7 @@ static void draw_week(GContext* ctx, struct tm* now, GRect bounds, int vcr) {
   GRect bbox = GRect(
     bounds.origin.x,
     bounds.origin.y + 2,
-    bounds.size.w,
+    bounds.size.w - 2,
     height - 4
   );
   graphics_context_set_text_color(ctx, COL_MONTH_TEXT);
