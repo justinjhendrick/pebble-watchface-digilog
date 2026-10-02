@@ -43,7 +43,7 @@ static void debug_bbox(GContext* ctx, GRect bbox) {
   graphics_draw_rect(ctx, bbox);
 }
 
-static void draw_arc_trigangle(GContext* ctx, GPoint center, int begin, int arc, int inner, int outer) {
+static void draw_arc(GContext* ctx, GPoint center, int begin, int arc, int inner, int outer) {
   int half_points = ARC_POINTS.num_points / 2;
   int step = arc / (half_points - 1);
   for (int i = 0; i < half_points; i++) {
@@ -113,7 +113,7 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
 
   // morning
   graphics_context_set_fill_color(ctx, COL_MORNING);
-  draw_arc_trigangle(
+  draw_arc(
     ctx,
     center,
     flip + sunrise_start * TRIG_MAX_ANGLE / minutes_per_day,
@@ -124,7 +124,7 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
 
   // day
   graphics_context_set_fill_color(ctx, COL_DAY);
-  draw_arc_trigangle(
+  draw_arc(
     ctx,
     center,
     flip + sunrise_end * TRIG_MAX_ANGLE / minutes_per_day,
@@ -135,7 +135,7 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
 
   // evening
   graphics_context_set_fill_color(ctx, COL_EVENING);
-  draw_arc_trigangle(ctx,
+  draw_arc(ctx,
     center,
     flip + sunset_start * TRIG_MAX_ANGLE / minutes_per_day,
     twilight_minutes * TRIG_MAX_ANGLE / minutes_per_day,
@@ -145,7 +145,7 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
 
   // night
   graphics_context_set_fill_color(ctx, COL_NIGHT);
-  draw_arc_trigangle(
+  draw_arc(
     ctx,
     center,
     flip + sunset_end * TRIG_MAX_ANGLE / minutes_per_day,
