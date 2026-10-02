@@ -6,13 +6,14 @@
 #define DEBUG_BBOX (false)
 #define BUFFER_LEN (40)
 
-#define COL_FACE          (GColorWhite)
-#define COL_STROKE        (GColorBlack)
 #define COL_SUN           (GColorYellow)
 #define COL_MORNING       (GColorMelon)
 #define COL_DAY           (GColorVividCerulean)
 #define COL_EVENING       (GColorChromeYellow)
 #define COL_NIGHT         (GColorCobaltBlue)
+
+#define COL_STROKE        (GColorBlack)
+#define COL_FACE          (GColorWhite)
 #define COL_TIME_TEXT     (GColorBlack)
 #define COL_DATE_BG       (GColorBlack)
 #define COL_DATE_TEXT     (GColorWhite)
@@ -75,27 +76,25 @@ static void draw_time(GContext* ctx, struct tm* now, GPoint center, int radius) 
   int w = full.size.w;
   int h = full.size.h;
   GRect hour = GRect(x, y, w, h / 2);
-  GRect hour_left = GRect(x, y, w / 2, hour.size.h);
-  GRect hour_right = GRect(x + w / 2, y, w / 2, hour.size.h);
   y += hour.size.h;
   GRect minute = GRect(x, y, w, hour.size.h);
   GFont big = get_font(hour.size.h);
-  debug_bbox(ctx, hour_left);
-  debug_bbox(ctx, hour_right);
+  debug_bbox(ctx, hour);
   debug_bbox(ctx, minute);
 
-  char hour_tens[BUFFER_LEN];
-  char hour_ones[BUFFER_LEN];
   char t[BUFFER_LEN];
 
   // hours on top
-  format_hour(hour_tens, hour_ones, BUFFER_LEN, now);
-  draw_text(ctx, hour_tens, big, hour_left, GTextAlignmentRight, hour.size.h / 10);
-  draw_text(ctx, hour_ones, big, hour_right, GTextAlignmentLeft, hour.size.h / 10);
+  if (clock_is_24h_style()) {
+    strftime(t, BUFFER_LEN, "%H", now);
+  } else {
+    strftime(t, BUFFER_LEN, "%l", now);
+  }
+  draw_text(ctx, t, big, hour, GTextAlignmentCenter, hour.size.h * 3 / 20);
 
   // minutes on bottom
   strftime(t, BUFFER_LEN, "%M", now);
-  draw_text(ctx, t, big, minute, GTextAlignmentCenter, minute.size.h / 10);
+  draw_text(ctx, t, big, minute, GTextAlignmentCenter, minute.size.h * 3 / 20);
 }
 
 static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_radius) {
@@ -202,14 +201,23 @@ static void update_layer(Layer* layer, GContext* ctx) {
   draw_date(ctx, bounds, date_height, now);
 }
 
+static int minutes_since_midnight(time_t ts) {
+  time_t midnight = time_start_of_today();
+  int seconds = abs(ts - midnight);
+  return seconds / 60;
+}
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple* t;
 
-  t = dict_find(iter, MESSAGE_KEY_sunriseMinuteSinceMidnight);
-  if (t) { s_sunrise_minute_since_midnight = t->value->int32; }
 
-  t = dict_find(iter, MESSAGE_KEY_sunsetMinuteSinceMidnight);
-  if (t) { s_sunset_minute_since_midnight = t->value->int32; }
+  t = dict_find(iter, MESSAGE_KEY_sunrise);
+  if (t) { s_sunrise_minute_since_midnight = minutes_since_midnight(t->value->int32); }
+
+  t = dict_find(iter, MESSAGE_KEY_sunset);
+  if (t) { s_sunset_minute_since_midnight = minutes_since_midnight(t->value->int32); }
+
+  layer_mark_dirty(s_layer);
 }
 
 static void window_load(Window* window) {

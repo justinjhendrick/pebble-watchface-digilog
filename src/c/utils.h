@@ -35,25 +35,6 @@ static void fast_forward_time(struct tm* now) {
   now->tm_wday = now->tm_sec % 7;      /* Day of week. [0-6] */
 }
 
-static void format_hour(char* tens, char* ones, int size, struct tm* now) {
-  int hour = now->tm_hour;
-  if (clock_is_24h_style()) {
-    snprintf(tens, size, "%d", hour / 10);
-    snprintf(ones, size, "%d", hour % 10);
-    return;
-  }
-  hour = now->tm_hour % 12;
-  if (hour == 0) {
-    hour = 12;
-  }
-  if (hour / 10 == 0) {
-    snprintf(tens, size, "%s", " ");
-  } else {
-    snprintf(tens, size, "%d", hour / 10);
-  }
-  snprintf(ones, size, "%d", hour % 10);
-}
-
 static void draw_text(
     GContext* ctx,
     const char* buffer,
