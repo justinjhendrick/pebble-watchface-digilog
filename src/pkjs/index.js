@@ -44,9 +44,6 @@ function getRequest(url, onload) {
   xhr.send();
 }
 
-// These INVALIDS must match watch side definition
-var INVALID_TIME = 0;
-
 var location_cache = {
   lat: null,
   lon: null,
@@ -54,8 +51,8 @@ var location_cache = {
 
 var sun_cache = {
   time: 0,
-  rise: INVALID_TIME,
-  set: INVALID_TIME,
+  rise: 0,
+  set: 0,
 }
 
 function getSun() {
@@ -139,6 +136,6 @@ Pebble.addEventListener("ready", function(e) {
 
 Pebble.addEventListener("appmessage", function(e) {
   // sending an empty message from watch to phone
-  // is interpreted as "give me the current weather"
+  // is interpreted as "give me the current sunrise/sunset"
   getLocation();
 });

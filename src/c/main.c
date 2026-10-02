@@ -48,19 +48,21 @@ static void draw_arc_trigangle(GContext* ctx, GPoint center, int begin, int arc,
   int step = arc / (half_points - 1);
   for (int i = 0; i < half_points; i++) {
     int a = begin + step * i;
-    ARC_POINTS.points[i] = cartesian_from_polar_trigangle(center, outer, a);
+    ARC_POINTS.points[i] = cartesian_from_polar(center, outer, a);
   }
   for (int j = 0; j < half_points; j++) {
     int a = begin + arc - step * j;
-    ARC_POINTS.points[half_points + j] = cartesian_from_polar_trigangle(center, inner, a);
+    ARC_POINTS.points[half_points + j] = cartesian_from_polar(center, inner, a);
   }
   gpath_draw_filled(ctx, s_arc);
   gpath_draw_outline(ctx, s_arc);
 }
 
 static void draw_sun(GContext* ctx, struct tm* now, GPoint center, int radius, int sun_radius) {
-  int hour_angle_deg = 360 * now->tm_hour / 24 + 180;
-  GPoint mpoint = cartesian_from_polar(center, radius, hour_angle_deg);
+  int total_mins = 24 * 60;
+  int current_mins = now->tm_hour * 60 + now->tm_min;
+  int hour_angle = current_mins * TRIG_MAX_ANGLE / total_mins + DEG_TO_TRIGANGLE(180);
+  GPoint mpoint = cartesian_from_polar(center, radius, hour_angle);
   graphics_context_set_fill_color(ctx, COL_SUN);
   graphics_context_set_stroke_width(ctx, 3);
   graphics_context_set_stroke_color(ctx, COL_STROKE);
@@ -210,14 +212,27 @@ static int minutes_since_midnight(time_t ts) {
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple* t;
 
-
   t = dict_find(iter, MESSAGE_KEY_sunrise);
-  if (t) { s_sunrise_minute_since_midnight = minutes_since_midnight(t->value->int32); }
+  if (t && t->value->int32 != 0) { s_sunrise_minute_since_midnight = minutes_since_midnight(t->value->int32); }
 
   t = dict_find(iter, MESSAGE_KEY_sunset);
-  if (t) { s_sunset_minute_since_midnight = minutes_since_midnight(t->value->int32); }
+  if (t && t->value->int32 != 0) { s_sunset_minute_since_midnight = minutes_since_midnight(t->value->int32); }
 
   layer_mark_dirty(s_layer);
+}
+
+static void maybe_request_sun() {
+  static time_t s_last_request_sent = 0;
+  time_t now = time(NULL);
+
+  if (now >= s_last_request_sent + 24 * 60 * 60) {
+    // send an empty message. that means "give me sun!"
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    dict_write_uint8(iter, 0, 0);
+    app_message_outbox_send();
+    s_last_request_sent = now;
+  }
 }
 
 static void window_load(Window* window) {
@@ -234,6 +249,7 @@ static void window_unload(Window* window) {
 
 static void tick_handler(struct tm* now, TimeUnits units_changed) {
   layer_mark_dirty(s_layer);
+  maybe_request_sun();
 }
 
 static void init(void) {

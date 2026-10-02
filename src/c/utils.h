@@ -1,15 +1,11 @@
 #include <pebble.h>
 
-static GPoint cartesian_from_polar_trigangle(GPoint center, int radius, int trigangle) {
+static GPoint cartesian_from_polar(GPoint center, int radius, int trigangle) {
   GPoint ret = {
     .x = (int16_t)(sin_lookup(trigangle) * radius / TRIG_MAX_RATIO) + center.x,
     .y = (int16_t)(-cos_lookup(trigangle) * radius / TRIG_MAX_RATIO) + center.y,
   };
   return ret;
-}
-
-static GPoint cartesian_from_polar(GPoint center, int radius, int angle_deg) {
-  return cartesian_from_polar_trigangle(center, radius, DEG_TO_TRIGANGLE(angle_deg));
 }
 
 static GRect rect_from_midpoint(GPoint midpoint, GSize size) {
