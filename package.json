@@ -25,17 +25,12 @@
     ],
     "resources": {
       "media": [
-        {"name":  "FONT_50", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_52", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_54", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_56", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_58", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_60", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
         {"name":  "FONT_62", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
         {"name":  "FONT_64", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
         {"name":  "FONT_66", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
         {"name":  "FONT_68", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_70", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" }
+        {"name":  "FONT_70", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" },
+        {"name":  "FONT_71", "file": "fonts/RampartOne-Regular.ttf", "characterRegex": "[ 0-9]", "type": "font" }
       ]
     }
   }

@@ -5,21 +5,17 @@
 #define DEBUG_TIME (false)
 #define DEBUG_BBOX (false)
 #define BUFFER_LEN (40)
-#define COL_BG                   COLOR_FALLBACK(GColorBlack,          GColorBlack)
-#define COL_MIN                  COLOR_FALLBACK(GColorDarkGreen,      GColorWhite)
-#define COL_FACE                 COLOR_FALLBACK(GColorWhite,          GColorBlack)
-#define COL_STROKE               COLOR_FALLBACK(GColorBlack,          GColorWhite)
-#define COL_SUN                  COLOR_FALLBACK(GColorYellow,         GColorWhite)
-#define COL_MORNING              COLOR_FALLBACK(GColorMelon,          GColorBlack)
-#define COL_DAY                  COLOR_FALLBACK(GColorVividCerulean,  GColorBlack)
-#define COL_EVENING              COLOR_FALLBACK(GColorChromeYellow,   GColorBlack)
-#define COL_NIGHT                COLOR_FALLBACK(GColorCobaltBlue,     GColorBlack)
-#define COL_MONTH_TEXT           COLOR_FALLBACK(GColorWhite,          GColorWhite)
-#define COL_HOUR_TEXT            COLOR_FALLBACK(GColorBlack,          GColorBlack)
-#define COL_ERR_TEXT             COLOR_FALLBACK(GColorBlack,          GColorWhite)
-#define COL_WDAY_TEXT            COLOR_FALLBACK(GColorBlack,          GColorWhite)
-#define COL_SELECTED_WDAY        COLOR_FALLBACK(GColorWhite,          GColorWhite)
-#define COL_SELECTED_WDAY_TEXT   COLOR_FALLBACK(GColorBlack,          GColorBlack)
+
+#define COL_FACE          (GColorWhite)
+#define COL_STROKE        (GColorBlack)
+#define COL_SUN           (GColorYellow)
+#define COL_MORNING       (GColorMelon)
+#define COL_DAY           (GColorVividCerulean)
+#define COL_EVENING       (GColorChromeYellow)
+#define COL_NIGHT         (GColorCobaltBlue)
+#define COL_TIME_TEXT     (GColorBlack)
+#define COL_DATE_BG       (GColorBlack)
+#define COL_DATE_TEXT     (GColorWhite)
 
 static Window* s_window;
 static Layer* s_layer;
@@ -72,24 +68,20 @@ static void draw_sun(GContext* ctx, struct tm* now, GPoint center, int radius, i
 }
 
 static void draw_time(GContext* ctx, struct tm* now, GPoint center, int radius) {
-  graphics_context_set_text_color(ctx, COL_HOUR_TEXT);
+  graphics_context_set_text_color(ctx, COL_TIME_TEXT);
   GRect full = rect_from_midpoint(center, GSize(radius * 2, radius * 2));
   int x = full.origin.x;
   int y = full.origin.y;
   int w = full.size.w;
   int h = full.size.h;
-  int big_h = h * 17 / 40;
-  GRect hour = GRect(x, y, w, big_h);
+  GRect hour = GRect(x, y, w, h / 2);
   GRect hour_left = GRect(x, y, w / 2, hour.size.h);
   GRect hour_right = GRect(x + w / 2, y, w / 2, hour.size.h);
   y += hour.size.h;
-  GRect date = GRect(x, y, w, h - 2 * big_h);
-  y += date.size.h;
-  GRect minute = GRect(x, y, w, big_h);
+  GRect minute = GRect(x, y, w, hour.size.h);
   GFont big = get_font(hour.size.h);
   debug_bbox(ctx, hour_left);
   debug_bbox(ctx, hour_right);
-  debug_bbox(ctx, date);
   debug_bbox(ctx, minute);
 
   char hour_tens[BUFFER_LEN];
@@ -98,17 +90,12 @@ static void draw_time(GContext* ctx, struct tm* now, GPoint center, int radius) 
 
   // hours on top
   format_hour(hour_tens, hour_ones, BUFFER_LEN, now);
-  draw_text(ctx, hour_tens, big, hour_left, GTextAlignmentRight, hour.size.h * 3 / 20);
-  draw_text(ctx, hour_ones, big, hour_right, GTextAlignmentLeft, hour.size.h * 3 / 20);
-
-  // date in the middle
-  GFont small = fonts_get_system_font(FONT_KEY_GOTHIC_24);
-  strftime(t, BUFFER_LEN, "%a %d %b", now);
-  draw_text(ctx, t, small, date, GTextAlignmentCenter, date.size.h / 5);
+  draw_text(ctx, hour_tens, big, hour_left, GTextAlignmentRight, hour.size.h / 10);
+  draw_text(ctx, hour_ones, big, hour_right, GTextAlignmentLeft, hour.size.h / 10);
 
   // minutes on bottom
   strftime(t, BUFFER_LEN, "%M", now);
-  draw_text(ctx, t, big, minute, GTextAlignmentCenter, minute.size.h * 3 / 20);
+  draw_text(ctx, t, big, minute, GTextAlignmentCenter, minute.size.h / 10);
 }
 
 static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_radius) {
@@ -167,6 +154,21 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
   );
 }
 
+static void draw_date(GContext* ctx, GRect bounds, int date_height, struct tm* now) {
+  GRect date_bbox = GRect(
+    bounds.origin.x,
+    bounds.origin.y + bounds.size.h - date_height,
+    bounds.size.w,
+    date_height
+  );
+  graphics_context_set_fill_color(ctx, COL_DATE_BG);
+  graphics_fill_rect(ctx, date_bbox, 0, GCornerNone);
+  char t[BUFFER_LEN];
+  strftime(t, BUFFER_LEN, "%a %d %b", now);
+  graphics_context_set_text_color(ctx, COL_DATE_TEXT);
+  draw_text(ctx, t, fonts_get_system_font(FONT_KEY_GOTHIC_28), date_bbox, GTextAlignmentCenter, 6);
+}
+
 static void update_layer(Layer* layer, GContext* ctx) {
   time_t temp = time(NULL);
   struct tm* now = localtime(&temp);
@@ -174,12 +176,20 @@ static void update_layer(Layer* layer, GContext* ctx) {
     fast_forward_time(now);
   }
 
+  int date_height = 28;
   GRect bounds = layer_get_bounds(layer);
-  int vcr = min(bounds.size.h, bounds.size.w) / 2;
-  GPoint center = grect_center_point(&bounds);
-  int sun_radius = bounds.size.w * 1 / 20;
+
+  GRect main = GRect(
+    bounds.origin.x,
+    bounds.origin.y,
+    bounds.size.w,
+    bounds.size.h - date_height
+  );
+  int vcr = min(main.size.h, main.size.w) / 2;
+  GPoint center = grect_center_point(&main);
+  int sun_radius = main.size.w * 3 / 40;
   int between = vcr - sun_radius * 2;
-  draw_sunlight_background(ctx, center, bounds.size.h);
+  draw_sunlight_background(ctx, center, main.size.h);
   graphics_context_set_stroke_width(ctx, 3);
   graphics_context_set_stroke_color(ctx, COL_STROKE);
   graphics_context_set_fill_color(ctx, COL_FACE);
@@ -187,8 +197,9 @@ static void update_layer(Layer* layer, GContext* ctx) {
   graphics_draw_circle(ctx, center, between);
 
   draw_sun(ctx, now, center, between + sun_radius, sun_radius);
-  int time_radius = between * 19 / 20;
-  draw_time(ctx, now, center, time_radius);
+  draw_time(ctx, now, center, between * 18 / 20);
+
+  draw_date(ctx, bounds, date_height, now);
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
@@ -204,7 +215,6 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 static void window_load(Window* window) {
   Layer* window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
-  window_set_background_color(s_window, COL_BG);
   s_layer = layer_create(bounds);
   layer_set_update_proc(s_layer, update_layer);
   layer_add_child(window_layer, s_layer);

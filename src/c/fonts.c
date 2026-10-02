@@ -5,13 +5,7 @@
 // 0 is the default icon.
 #define FIRST_RESOURCE_ID (1)
 // Make sure this matches package.json
-#if PBL_DISPLAY_WIDTH >= 260
-#define NUM_FONTS (15)
-#elif PBL_DISPLAY_WIDTH >= 200
-#define NUM_FONTS (11)
-#else
 #define NUM_FONTS (6)
-#endif
 
 #define DEBUG (false)
 
