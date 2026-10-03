@@ -1,10 +1,16 @@
 # Pebble Kingfisher Watchface
 
+https://apps.repebble.com/7a9d24751b8a49319ec1f6e7
+
 ## Screenshots
 
 ### Emery
 
 ![screenshot](screenshot_emery.png)
+
+### Gabbro
+
+![screenshot](screenshot_gabbro.png)
 
 ## License
 

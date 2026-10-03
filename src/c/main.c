@@ -5,6 +5,8 @@
 #define DEBUG_BBOX (false)
 #define BUFFER_LEN (40)
 
+#define STROKE_WIDTH (PBL_IF_ROUND_ELSE(5, 3))
+
 #define COL_SUN           (GColorYellow)
 #define COL_MORNING       (GColorMelon)
 #define COL_DAY           (GColorVividCerulean)
@@ -64,7 +66,7 @@ static void draw_sun(GContext* ctx, struct tm* now, GPoint center, int radius, i
   int hour_angle = current_mins * TRIG_MAX_ANGLE / total_mins + DEG_TO_TRIGANGLE(180);
   GPoint mpoint = cartesian_from_polar(center, radius, hour_angle);
   graphics_context_set_fill_color(ctx, COL_SUN);
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, STROKE_WIDTH);
   graphics_context_set_stroke_color(ctx, COL_STROKE);
   graphics_fill_circle(ctx, mpoint, sun_radius);
   graphics_draw_circle(ctx, mpoint, sun_radius);
@@ -119,7 +121,7 @@ static void draw_time(GContext* ctx, struct tm* now, GPoint center, int radius) 
 }
 
 static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_radius) {
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, STROKE_WIDTH);
   graphics_context_set_stroke_color(ctx, COL_STROKE);
   int inner_radius = 0;
   int twilight_minutes = 60;
@@ -175,6 +177,9 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
 }
 
 static void draw_date(GContext* ctx, GRect bounds, int date_height, struct tm* now) {
+  if (date_height == 0) {
+    return;
+  }
   GRect date_bbox = GRect(
     bounds.origin.x,
     bounds.origin.y + bounds.size.h - date_height,
@@ -196,7 +201,7 @@ static void update_layer(Layer* layer, GContext* ctx) {
     fast_forward_time(now);
   }
 
-  int date_height = 28;
+  int date_height = PBL_IF_ROUND_ELSE(0, 28);
   GRect bounds = layer_get_bounds(layer);
 
   GRect main = GRect(
@@ -205,12 +210,12 @@ static void update_layer(Layer* layer, GContext* ctx) {
     bounds.size.w,
     bounds.size.h - date_height
   );
-  int vcr = min(main.size.h, main.size.w) / 2;
+  int vcr = min(main.size.h, main.size.w) / 2 - PBL_IF_ROUND_ELSE(4, 0);
   GPoint center = grect_center_point(&main);
-  int sun_radius = main.size.w * 3 / 40;
+  int sun_radius = main.size.w * 3 / 40 + PBL_IF_ROUND_ELSE(5, 0);
   int between = vcr - sun_radius * 2;
   draw_sunlight_background(ctx, center, main.size.h);
-  graphics_context_set_stroke_width(ctx, 3);
+  graphics_context_set_stroke_width(ctx, STROKE_WIDTH);
   graphics_context_set_stroke_color(ctx, COL_STROKE);
   graphics_context_set_fill_color(ctx, COL_FACE);
   graphics_fill_circle(ctx, center, between);

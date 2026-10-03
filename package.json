@@ -2,8 +2,13 @@
   "name": "Kingfisher",
   "author": "justinjhendrick",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
-  "private": true,
+  "keywords": [
+    "sunrise",
+    "sunset",
+    "twilight",
+    "colorful"
+  ],
+  "private": false,
   "dependencies": {},
   "pebble": {
     "displayName": "Kingfisher",
@@ -11,7 +16,8 @@
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
-      "emery"
+      "emery",
+      "gabbro"
     ],
     "watchapp": {
       "watchface": true
