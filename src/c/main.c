@@ -223,9 +223,8 @@ static void update_layer(Layer* layer, GContext* ctx) {
 }
 
 static int minutes_since_midnight(time_t ts) {
-  time_t midnight = time_start_of_today();
-  int seconds = abs(ts - midnight);
-  return seconds / 60;
+  struct tm* local = localtime(&ts);
+  return local->tm_hour * 60 + local->tm_min;
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
