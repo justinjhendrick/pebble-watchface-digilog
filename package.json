@@ -25,12 +25,7 @@
     ],
     "resources": {
       "media": [
-        {"name":  "FONT_62", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_64", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_66", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_68", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_70", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[ 0-9]", "type": "font" },
-        {"name":  "FONT_71", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[ 0-9]", "type": "font" }
+        {"name":  "FONT_68", "file": "fonts/MPLUSU-Bold.ttf", "characterRegex": "[0-9]", "type": "font" }
       ]
     }
   }

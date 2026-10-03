@@ -1,6 +1,5 @@
 #include <pebble.h>
 #include "utils.h"
-#include "fonts.h"
 
 #define DEBUG_TIME (false)
 #define DEBUG_BBOX (false)
@@ -23,6 +22,7 @@ static Layer* s_layer;
 static GPath* s_arc;
 static int s_sunrise_minute_since_midnight = 60 * 6;
 static int s_sunset_minute_since_midnight = 60 * (6 + 12);
+static GFont s_font_lg = NULL;
 
 static const GPathInfo ARC_POINTS = {
   .num_points = 40,
@@ -75,28 +75,47 @@ static void draw_time(GContext* ctx, struct tm* now, GPoint center, int radius) 
   GRect full = rect_from_midpoint(center, GSize(radius * 2, radius * 2));
   int x = full.origin.x;
   int y = full.origin.y;
-  int w = full.size.w;
-  int h = full.size.h;
-  GRect hour = GRect(x, y, w, h / 2);
-  y += hour.size.h;
-  GRect minute = GRect(x, y, w, hour.size.h);
-  GFont big = get_font(hour.size.h);
-  debug_bbox(ctx, hour);
-  debug_bbox(ctx, minute);
+  int w = full.size.w / 2;
+  int h = full.size.h / 2;
+  GRect tl = GRect(x    , y,     w, h);
+  GRect tr = GRect(x + w, y,     w, h);
+  GRect bl = GRect(x    , y + h, w, h);
+  GRect br = GRect(x + w, y + h, w, h);
+  debug_bbox(ctx, tl);
+  debug_bbox(ctx, tr);
+  debug_bbox(ctx, bl);
+  debug_bbox(ctx, br);
 
   char t[BUFFER_LEN];
 
   // hours on top
+  int hours_shift_up = 7;
+  int hour = now->tm_hour;
   if (clock_is_24h_style()) {
-    strftime(t, BUFFER_LEN, "%H", now);
+    snprintf(t, BUFFER_LEN, "%d", hour / 10);
+    draw_text(ctx, t, s_font_lg, tl, GTextAlignmentRight, hours_shift_up);
+    snprintf(t, BUFFER_LEN, "%d", hour % 10);
+    draw_text(ctx, t, s_font_lg, tr, GTextAlignmentLeft, hours_shift_up);
   } else {
-    strftime(t, BUFFER_LEN, "%l", now);
+    hour = hour % 12;
+    if (hour == 0) {
+      hour = 12;
+    }
+    if (hour / 10 != 0) {
+      snprintf(t, BUFFER_LEN, "%d", hour / 10);
+      draw_text(ctx, t, s_font_lg, tl, GTextAlignmentRight, hours_shift_up);
+    }
+    snprintf(t, BUFFER_LEN, "%d", hour % 10);
+    draw_text(ctx, t, s_font_lg, tr, GTextAlignmentLeft, hours_shift_up);
   }
-  draw_text(ctx, t, big, hour, GTextAlignmentCenter, hour.size.h * 3 / 20);
 
   // minutes on bottom
-  strftime(t, BUFFER_LEN, "%M", now);
-  draw_text(ctx, t, big, minute, GTextAlignmentCenter, minute.size.h * 3 / 20);
+  int minutes_shift_up = 15;
+  int minute = now->tm_min;
+  snprintf(t, BUFFER_LEN, "%d", minute / 10);
+  draw_text(ctx, t, s_font_lg, bl, GTextAlignmentRight, minutes_shift_up);
+  snprintf(t, BUFFER_LEN, "%d", minute % 10);
+  draw_text(ctx, t, s_font_lg, br, GTextAlignmentLeft, minutes_shift_up);
 }
 
 static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_radius) {
@@ -197,7 +216,7 @@ static void update_layer(Layer* layer, GContext* ctx) {
   graphics_fill_circle(ctx, center, between);
   graphics_draw_circle(ctx, center, between);
 
-  draw_sun(ctx, now, center, between + sun_radius, sun_radius);
+  draw_sun(ctx, now, center, between + sun_radius + 1, sun_radius);
   draw_time(ctx, now, center, between * 18 / 20);
 
   draw_date(ctx, bounds, date_height, now);
@@ -253,7 +272,7 @@ static void tick_handler(struct tm* now, TimeUnits units_changed) {
 }
 
 static void init(void) {
-  init_fonts();
+  s_font_lg = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_68));
   s_window = window_create();
   window_set_window_handlers(s_window, (WindowHandlers) {
     .load = window_load,
@@ -268,7 +287,7 @@ static void init(void) {
 
 static void deinit(void) {
   window_destroy(s_window);
-  deinit_fonts();
+  fonts_unload_custom_font(s_font_lg);
 }
 
 int main(void) {
