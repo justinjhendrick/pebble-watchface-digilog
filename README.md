@@ -8,9 +8,13 @@ https://apps.repebble.com/7a9d24751b8a49319ec1f6e7
 
 ![screenshot](screenshot_emery.png)
 
+![screenshot](screenshot_emery2.png)
+
 ### Gabbro
 
 ![screenshot](screenshot_gabbro.png)
+
+![screenshot](screenshot_gabbro2.png)
 
 ## License
 
