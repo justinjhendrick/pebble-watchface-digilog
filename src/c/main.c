@@ -236,10 +236,16 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple* t;
 
   t = dict_find(iter, MESSAGE_KEY_sunrise);
-  if (t && t->value->int32 != 0) { s_sunrise_minute_since_midnight = minutes_since_midnight(t->value->int32); }
+  if (t && t->value->int32 != 0) {
+    s_sunrise_minute_since_midnight = minutes_since_midnight(t->value->int32);
+    persist_write_int(MESSAGE_KEY_sunrise, s_sunrise_minute_since_midnight);
+  }
 
   t = dict_find(iter, MESSAGE_KEY_sunset);
-  if (t && t->value->int32 != 0) { s_sunset_minute_since_midnight = minutes_since_midnight(t->value->int32); }
+  if (t && t->value->int32 != 0) {
+    s_sunset_minute_since_midnight = minutes_since_midnight(t->value->int32);
+    persist_write_int(MESSAGE_KEY_sunset, s_sunset_minute_since_midnight);
+  }
 
   layer_mark_dirty(s_layer);
 }
@@ -276,6 +282,9 @@ static void tick_handler(struct tm* now, TimeUnits units_changed) {
 }
 
 static void init(void) {
+  if (persist_exists(MESSAGE_KEY_sunrise)) { s_sunrise_minute_since_midnight = persist_read_int(MESSAGE_KEY_sunrise); }
+  if (persist_exists(MESSAGE_KEY_sunset)) { s_sunset_minute_since_midnight = persist_read_int(MESSAGE_KEY_sunset); }
+
   s_font_lg = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_68));
   s_window = window_create();
   window_set_window_handlers(s_window, (WindowHandlers) {
