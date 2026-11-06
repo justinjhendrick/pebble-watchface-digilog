@@ -60,9 +60,15 @@ static void draw_arc(GContext* ctx, GPoint center, int begin, int arc, int inner
   gpath_draw_outline(ctx, s_arc);
 }
 
+static int solar_noon_offset() {
+  int clock_noon = 12 * 60;
+  int solar_noon = (s_sunrise_minute_since_midnight + s_sunset_minute_since_midnight) / 2;
+  return solar_noon - clock_noon;
+}
+
 static void draw_sun(GContext* ctx, struct tm* now, GPoint center, int radius, int sun_radius) {
   int total_mins = 24 * 60;
-  int current_mins = now->tm_hour * 60 + now->tm_min;
+  int current_mins = now->tm_hour * 60 + now->tm_min - solar_noon_offset();
   int hour_angle = current_mins * TRIG_MAX_ANGLE / total_mins + DEG_TO_TRIGANGLE(180);
   GPoint mpoint = cartesian_from_polar(center, radius, hour_angle);
   graphics_context_set_fill_color(ctx, COL_SUN);
@@ -126,9 +132,10 @@ static void draw_sunlight_background(GContext* ctx, GPoint center, int outer_rad
   int inner_radius = 0;
   int twilight_minutes = 60;
   int minutes_per_day = 60 * 24;
-  int sunrise_end = s_sunrise_minute_since_midnight;
+  int solar_offset = solar_noon_offset();
+  int sunrise_end = s_sunrise_minute_since_midnight - solar_offset;
   int sunrise_start = sunrise_end - twilight_minutes;
-  int sunset_start = s_sunset_minute_since_midnight;
+  int sunset_start = s_sunset_minute_since_midnight - solar_offset;
   int sunset_end = sunset_start + twilight_minutes;
   int flip = TRIG_MAX_ANGLE / 2;
 
